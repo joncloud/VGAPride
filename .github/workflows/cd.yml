@@ -1,0 +1,39 @@
+name: 'CD'
+
+on:
+  push:
+    branches:
+      - 'main'
+      - 'cd-test'
+
+jobs:
+  build:
+    runs-on: 'windows-latest'
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Cache Dependencies
+        id: 'cache-dependencies'
+        uses: 'actions/cache@v3'
+        with:
+          path: |
+            C:/DOSBox-X
+            C:/ProgramData/chocolatey/bin/upx.exe
+            ./.borland
+          key: ${{ runner.os }}-dependencies
+
+      - name: 'Install dependencies'
+        if: steps.cache-dependencies.outputs.cache-hit != 'true'
+        run: |
+          choco install --yes upx
+          choco install --yes dosbox-x
+
+      - name: 'Build'
+        shell: 'cmd'
+        env:
+          BORLANDDOWNLOAD: ${{ secrets.BORLANDDOWNLOAD }}
+        run: |
+          .\build.cmd
+
+      # TODO do something like make a release with .\drivec\VGAPRIDE\vgapride.zip
